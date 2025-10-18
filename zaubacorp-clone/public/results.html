@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Results</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Search Results</h1>
+    <a href="/">Back to Search</a>
+  </header>
+  <section id="results"></section>
+  <div id="pagination"></div>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const q = urlParams.get('q') || '';
+    let currentPage = 1;
+
+    const loadResults = (page = 1) => {
+      fetch(`/api/companies?q=${encodeURIComponent(q)}&page=${page}`)
+        .then(res => res.json())
+        .then(data => {
+          const resultsDiv = document.getElementById('results');
+          resultsDiv.innerHTML = '';
+          data.companies.forEach(company => {
+            const div = document.createElement('div');
+            div.className = 'company';
+            div.innerHTML = `
+              <h3>${company.name}</h3>
+              <p>CIN: ${company.cin}</p>
+              <p>Status: ${company.status}</p>
+              <p>Address: ${company.address}</p>
+              <p>Directors: ${company.directors.join(', ')}</p>
+            `;
+            resultsDiv.appendChild(div);
+          });
+
+          // Pagination
+          const paginationDiv = document.getElementById('pagination');
+          paginationDiv.innerHTML = '';
+          for (let i = 1; i <= data.pages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.onclick = () => loadResults(i);
+            paginationDiv.appendChild(btn);
+          }
+        });
+    };
+
+    loadResults();
+  </script>
+</body>
+</html>

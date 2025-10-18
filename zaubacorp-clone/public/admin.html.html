@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Manage Companies</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Admin Panel</h1>
+    <a href="/">Back to Homepage</a>
+  </header>
+  <section>
+    <h2>Add Company</h2>
+    <form id="addForm">
+      <input type="text" id="name" placeholder="Company Name" required>
+      <input type="text" id="cin" placeholder="CIN" required>
+      <input type="date" id="registration_date">
+      <input type="text" id="status" placeholder="Status">
+      <textarea id="address" placeholder="Address"></textarea>
+      <input type="text" id="directors" placeholder="Directors (comma-separated)">
+      <button type="submit">Add</button>
+    </form>
+  </section>
+  <section>
+    <h2>Companies List</h2>
+    <ul id="companiesList"></ul>
+  </section>
+  <script>
+    const loadCompanies = () => {
+      fetch('/api/companies')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('companiesList');
+          list.innerHTML = '';
+          data.companies.forEach(company => {
+            const li = document.createElement('li');
+            li.innerHTML = `${company.name} (${company.cin}) <button onclick="deleteCompany(${company.id})">Delete</button>`;
+            list.appendChild(li);
+          });
+        });
+    };
+
+    document.getElementById('addForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById('name').value,
+        cin: document.getElementById('cin').value,
+        registration_date: document.getElementById('registration_date').value,
+        status: document.getElementById('status').value,
+        address: document.getElementById('address').value,
+        directors: document.getElementById('directors').value.split(',')
+      };
+      fetch('/api/companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(() => {
+        loadCompanies();
+        e.target.reset();
+      });
+    });
+
+    const deleteCompany = (id) => {
+      if (confirm('Delete?')) {
+        fetch(`/api/companies/${id}`, { method: 'DELETE' }).then(() => loadCompanies());
+      }
+    };
+
+    loadCompanies();
+  </script>
+</body>
+</html>
